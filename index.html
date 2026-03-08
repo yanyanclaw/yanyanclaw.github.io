@@ -1,22 +1,244 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>黑貓修仙傳</title>
-    <style>
-        body { font-family: 'Arial', sans-serif; background-color: #0a0a0a; color: #e8e0d0; margin: 0; padding: 20px; }
-        h1 { color: #c9a84c; font-size: 2em; margin: 20px 0; text-align: center; }
-        p { line-height: 1.6; margin: 10px 0; }
-        footer { text-align: center; font-style: italic; padding-top: 20px; color: #e8e0d0; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>閱讀室</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --text: #2c2c2c;
+    --muted: #888;
+    --accent: #3d6a4f;
+    --border: #e5e2dc;
+    --max: 680px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Noto Serif TC", "Georgia", serif;
+    font-size: 17px;
+    line-height: 1.85;
+    min-height: 100vh;
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  #app { max-width: var(--max); margin: 0 auto; padding: 40px 20px 80px; }
+
+  /* ── 首頁 ── */
+  .site-title {
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 48px;
+  }
+  .site-title a { color: var(--muted); }
+
+  .novel-card {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 28px;
+    background: var(--surface);
+    margin-bottom: 20px;
+  }
+  .novel-card h2 { font-size: 1.3em; margin-bottom: 8px; }
+  .novel-card .meta { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+  .novel-card p { font-size: 15px; color: #555; line-height: 1.7; }
+  .novel-card .read-btn {
+    display: inline-block;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 5px 14px;
+  }
+
+  /* ── 章節列表 ── */
+  .novel-header { margin-bottom: 36px; }
+  .novel-header h1 { font-size: 1.6em; margin-bottom: 8px; }
+  .novel-header .genre { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+  .novel-header .desc { font-size: 15px; color: #555; line-height: 1.7; }
+
+  .chapter-list { list-style: none; }
+  .chapter-list li {
+    border-bottom: 1px solid var(--border);
+  }
+  .chapter-list li:first-child { border-top: 1px solid var(--border); }
+  .chapter-list li a {
+    display: block;
+    padding: 14px 4px;
+    color: var(--text);
+    font-size: 15px;
+  }
+  .chapter-list li a:hover { color: var(--accent); text-decoration: none; padding-left: 8px; transition: padding .15s; }
+
+  /* ── 閱讀頁 ── */
+  .reader-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 40px;
+    gap: 12px;
+  }
+  .reader-nav a { color: var(--muted); }
+  .reader-nav a:hover { color: var(--accent); }
+  .reader-nav .chapter-title { text-align: center; flex: 1; }
+
+  .reader-content h1 {
+    font-size: 1.25em;
+    margin-bottom: 32px;
+    font-weight: normal;
+    color: #444;
+  }
+  .reader-content p {
+    margin-bottom: 1.4em;
+    text-align: justify;
+  }
+  .reader-content p:first-of-type::first-letter {
+    font-size: 1.5em;
+    line-height: 1;
+    float: left;
+    margin-right: 4px;
+  }
+
+  .reader-nav-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .reader-nav-bottom a { color: var(--muted); }
+  .reader-nav-bottom a:hover { color: var(--accent); }
+
+  .loading { color: var(--muted); font-size: 14px; }
+  .error { color: #c0392b; font-size: 14px; }
+</style>
 </head>
 <body>
-    <h1>黑貓修仙傳</h1>
-    <p>小黑仔遭藍貓法師詛咒，被人誤認為白貓，深感恥辱。</p>
-    <p>他踏上修仙之路尋求解咒，途中遇見伙伴共同闖過五色寶山的五關挑戰。</p>
-    <p>在經歷重重困難後，他們發現詛咒的真兇竟是掌控色彩的神祇。</p>
-    <p>三人聯手對抗色彩之神，終結其不公詛咒，解救了所有受害者的靈魂。</p>
-    <footer>持續更新中 🐱</footer>
+<div id="app"></div>
+<script>
+const app = document.getElementById('app');
+
+// ── Router ──
+function route() {
+  const hash = location.hash.replace(/^#\/?/, '') || '';
+  const parts = hash.split('/').filter(Boolean);
+  if (!parts.length) return renderHome();
+  if (parts.length === 1) return renderNovel(parts[0]);
+  if (parts.length === 2) return renderChapter(parts[0], parts[1]);
+}
+
+window.addEventListener('hashchange', route);
+window.addEventListener('load', route);
+
+// ── Fetch helpers ──
+async function fetchJSON(url) {
+  const r = await fetch(url + '?t=' + Date.now());
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+async function fetchText(url) {
+  const r = await fetch(url + '?t=' + Date.now());
+  if (!r.ok) throw new Error(r.status);
+  return r.text();
+}
+
+// ── Home: list novels ──
+async function renderHome() {
+  app.innerHTML = `<div class="site-title"><a href="#">閱讀室</a></div><div class="loading">載入中…</div>`;
+  try {
+    const catalog = await fetchJSON('novels/catalog.json');
+    let html = `<div class="site-title"><a href="#">閱讀室</a></div>`;
+    for (const id of catalog) {
+      try {
+        const meta = await fetchJSON(`novels/${id}/meta.json`);
+        const count = meta.chapters ? meta.chapters.length : 0;
+        html += `<div class="novel-card">
+          <h2>${meta.title}</h2>
+          <div class="meta">${meta.genre || ''} &nbsp;·&nbsp; 共 ${count} 章</div>
+          <p>${meta.description || ''}</p>
+          <a class="read-btn" href="#/${id}">開始閱讀 →</a>
+        </div>`;
+      } catch(e) {}
+    }
+    app.innerHTML = html;
+  } catch(e) {
+    app.innerHTML = `<div class="site-title">閱讀室</div><div class="error">無法載入小說列表</div>`;
+  }
+}
+
+// ── Novel: chapter list ──
+async function renderNovel(novelId) {
+  app.innerHTML = `<div class="site-title"><a href="#">閱讀室</a></div><div class="loading">載入中…</div>`;
+  try {
+    const meta = await fetchJSON(`novels/${novelId}/meta.json`);
+    const chapters = meta.chapters || [];
+    let list = chapters.map((ch, i) =>
+      `<li><a href="#/${novelId}/${String(i+1).padStart(2,'0')}">${ch.title || '第' + (i+1) + '章'}</a></li>`
+    ).join('');
+    app.innerHTML = `
+      <div class="site-title"><a href="#">閱讀室</a></div>
+      <div class="novel-header">
+        <h1>${meta.title}</h1>
+        <div class="genre">${meta.genre || ''}</div>
+        <p class="desc">${meta.description || ''}</p>
+      </div>
+      <ul class="chapter-list">${list}</ul>`;
+  } catch(e) {
+    app.innerHTML = `<div class="error">找不到小說：${novelId}</div>`;
+  }
+}
+
+// ── Chapter reader ──
+async function renderChapter(novelId, chapterId) {
+  app.innerHTML = `<div class="loading">載入中…</div>`;
+  try {
+    const meta = await fetchJSON(`novels/${novelId}/meta.json`);
+    const chapters = meta.chapters || [];
+    const idx = parseInt(chapterId, 10) - 1;
+    const chInfo = chapters[idx] || {};
+    const chTitle = chInfo.title || ('第' + chapterId + '章');
+
+    const mdText = await fetchText(`novels/${novelId}/chapters/${chapterId}.md`);
+    const html = marked.parse(mdText);
+
+    const prevLink = idx > 0
+      ? `<a href="#/${novelId}/${String(idx).padStart(2,'0')}">← 上一章</a>`
+      : `<span></span>`;
+    const nextLink = idx < chapters.length - 1
+      ? `<a href="#/${novelId}/${String(idx+2).padStart(2,'0')}">下一章 →</a>`
+      : `<span></span>`;
+
+    app.innerHTML = `
+      <div class="reader-nav">
+        ${prevLink}
+        <span class="chapter-title"><a href="#/${novelId}">${meta.title}</a></span>
+        ${nextLink}
+      </div>
+      <div class="reader-content">${html}</div>
+      <div class="reader-nav-bottom">
+        ${prevLink}
+        <a href="#/${novelId}">目錄</a>
+        ${nextLink}
+      </div>`;
+  } catch(e) {
+    app.innerHTML = `<div class="error">章節載入失敗：${e.message}</div>`;
+  }
+}
+</script>
 </body>
 </html>
